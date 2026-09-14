@@ -1,4 +1,5 @@
 runtime/node_modules/
+pushnow/runtime/node_modules/
 __pycache__/
 *.pyc
 target/

@@ -1,5 +1,7 @@
 # PushNow Python SDK
 
+[中文说明](README.zh-CN.md)
+
 Python 3.10+ and **Node.js 22+** are required. This is a subprocess binding to the
 bundled, pinned HPKE runtime, not native Python cryptography. No Python runtime
 dependencies are needed. Read [CONTRACT.md](CONTRACT.md) for the complete API,
@@ -15,10 +17,16 @@ python3 -m unittest discover -s tests -p 'test_*.py'
 npm --prefix runtime test
 ```
 
-Keep `pushnow.py` beside `runtime/`, or add this folder to your Python path.
-No pip installation is required. Optional `pip install .` installs the Python
-module only: retain the runtime folder separately and pass its absolute main.js
-path with `runtime=`. The build dependency is pinned in pyproject.toml.
+Install from PyPI after publication:
+
+```sh
+pip install pushnow
+```
+
+For local development, `pip install .` installs the Python package and bundled
+runtime bridge. Run `npm --prefix pushnow/runtime ci --ignore-scripts` after
+installation or source checkout to install the pinned HPKE dependency beside the
+bridge runtime.
 
 ## Authorize
 

@@ -17,7 +17,7 @@ Issues = "https://github.com/pushnow-dev/pushnow-python/issues"
 Source = "https://github.com/pushnow-dev/pushnow-python"
 
 [tool.setuptools]
-py-modules = ["pushnow"]
+packages = ["pushnow", "pushnow.runtime"]
 
-# Runtime is deliberately shipped as a separate directory in this source repo.
-# Pass runtime= after installing until the wheel packaging is finalized.
+[tool.setuptools.package-data]
+pushnow = ["runtime/*.js", "runtime/package.json", "runtime/package-lock.json"]
