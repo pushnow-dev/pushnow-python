@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "pushnow"
-version = "0.1.0"
+version = "0.1.1"
 description = "Python bindings for PushNow v2 encrypted notifications with an explicit Node.js crypto runtime"
 requires-python = ">=3.10"
 dependencies = []
