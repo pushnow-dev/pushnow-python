@@ -6,7 +6,7 @@ import { readFile } from 'node:fs/promises';
 import { createECDH, randomUUID, webcrypto } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import { suite, bytes, base64, decode, certificateText } from '../runtime/crypto.js';
-import { v2AAD, fingerprint } from '../runtime/v2-crypto.js';
+import { v2AAD } from '../runtime/v2-crypto.js';
 import { execute } from '../runtime/bridge.js';
 
 const vector = JSON.parse(await readFile(new URL('./cli-vector.json', import.meta.url), 'utf8'));
@@ -38,24 +38,21 @@ test('decrypts actual CLI-produced HPKE Auth vector; rejects tampering and wrong
   await assert.rejects(open(vector.envelope, 'message', { ...f.config, user_id: randomUUID() }));
   await assert.rejects(open(vector.envelope, 'message', { ...f.config, source_id: randomUUID() }));
 });
-test('rejects token-only config, does not require a manual pin for complete config and invalid sound before upload', async () => {
-  const rootFingerprint = fingerprint(f.config.identity_public_key);
-  const token = await execute({ operation: 'recipients', rootFingerprint, config: { source_key: 'secret' } });
+test('rejects token-only config and invalid sound before upload', async () => {
+  const token = await execute({ operation: 'recipients', config: { source_key: 'secret' } });
   assert.equal(token.error.code, 'E2EE_CONFIG_REQUIRED'); assert.deepEqual(token.logs, []);
   const unpinned = await execute({ operation: 'prepare', config: f.config, notification: { title: 'Hi', sound: 'custom' } });
   assert.equal(unpinned.error.code, 'INVALID_SOUND'); assert.deepEqual(unpinned.logs, []);
-  const wrong = await execute({ operation: 'recipients', config: f.config, rootFingerprint: '0'.repeat(64) });
-  assert.equal(wrong.error.code, 'ROOT_PIN_MISMATCH');
   for (const value of [null, '', 'custom', 'pushnow-chime.wav', {}, false]) {
-    const sound = await execute({ operation: 'prepare', rootFingerprint, config: f.config,
+    const sound = await execute({ operation: 'prepare', config: f.config,
       notification: { title: 'Hi', sound: value, files: [{ path: '/must-not-be-read' }] } });
     assert.equal(sound.error.code, 'INVALID_SOUND'); assert.deepEqual(sound.logs, []);
   }
-  const invalid = await execute({ operation: 'prepare', rootFingerprint, config: f.config, notification: { title: 'Hi', scheduledAt: '2030-02-30T10:00:00Z' } });
+  const invalid = await execute({ operation: 'prepare', config: f.config, notification: { title: 'Hi', scheduledAt: '2030-02-30T10:00:00Z' } });
   assert.equal(invalid.error.code, 'INVALID_TIMESTAMP');
 });
 
-test('language binding authorizes against pinned root and sends real HTTP E2EE requests', { timeout: 180000 }, async () => {
+test('language binding authorizes with an account token and sends real HTTP E2EE requests', { timeout: 180000 }, async () => {
   const uploads = new Map(), messages = new Map(), pending = new Map();
   const accountAccessToken = 'account-test-token';
   const originalSourcePublic = f.directory.source_public_key;
@@ -117,7 +114,6 @@ test('language binding authorizes against pinned root and sends real HTTP E2EE r
   });
   await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
   origin = 'http://127.0.0.1:' + server.address().port;
-  const rootFingerprint = fingerprint(f.config.identity_public_key);
   const notification = { title: 'Sensitive fixture title', body: 'Sensitive fixture body',
     links: ['https://example.com/guide'], pushEnabled: false, sound: 'chime',
     scheduledAt: new Date(Date.now() + 300000).toISOString(), expiresAt: new Date(Date.now() + 600000).toISOString(),
@@ -133,7 +129,7 @@ test('language binding authorizes against pinned root and sends real HTTP E2EE r
       child.stdout.on('data', b => { out += b; }); child.stderr.on('data', b => { err += b; });
       child.on('error', e => { clearTimeout(timer); reject(e); });
       child.on('close', code => { clearTimeout(timer); code === 0 ? resolve(JSON.parse(out)) : reject(new Error('Probe failed: ' + err)); });
-      child.stdin.end(JSON.stringify({ apiURL: origin, accessToken: accountAccessToken, rootFingerprint, notification }));
+      child.stdin.end(JSON.stringify({ apiURL: origin, accessToken: accountAccessToken, notification }));
     });
     assert.deepEqual(failures, []); assert.equal(output.deviceCount, 2);
     assert.equal(output.first.deduplicated, false); assert.equal(output.second.deduplicated, true);
@@ -141,13 +137,13 @@ test('language binding authorizes against pinned root and sends real HTTP E2EE r
     assert.equal(output.envelope.sound, 'chime');
     assert.equal(output.sent.envelope.sound, 'silent');
     assert.equal(output.defaultEnvelope.sound, 'default');
-    assert.ok(!Object.hasOwn(output.legacyEnvelope, 'sound'));
+    assert.ok(!Object.hasOwn(output.omittedSoundEnvelope, 'sound'));
     assert.deepEqual(output.envelope.notify_device_ids, []);
     assert.equal(output.envelope.scheduled_at, notification.scheduledAt);
     assert.equal(output.envelope.expires_at, notification.expiresAt);
     const full = await open(output.envelope), preview = await open(output.envelope, 'preview');
     assert.ok(!Object.hasOwn(full, 'sound')); assert.ok(!Object.hasOwn(preview, 'sound'));
-    for (const envelope of [output.sent.envelope, output.defaultEnvelope, output.legacyEnvelope]) {
+    for (const envelope of [output.sent.envelope, output.defaultEnvelope, output.omittedSoundEnvelope]) {
       assert.ok(!Object.hasOwn(await open(envelope), 'sound'));
       assert.ok(!Object.hasOwn(await open(envelope, 'preview'), 'sound'));
     }
@@ -165,15 +161,8 @@ test('language binding authorizes against pinned root and sends real HTTP E2EE r
     const logs = JSON.stringify(output.logs);
     for (const secret of [f.config.source_key, notification.title, 'private.txt', 'test-device-code', output.envelope.ciphertext]) assert.ok(!logs.includes(secret));
     for (const log of output.logs) assert.deepEqual(Object.keys(log).sort(), ['elapsedMs', 'method', 'route', 'status']);
-    // A well-formed encrypted grant must still fail an independently pinned wrong root.
-    const wrongRoot = '0'.repeat(64);
-    const begin = await execute({ operation: 'beginAuthorization', rootFingerprint: wrongRoot, apiURL: origin, name: 'Wrong-root test' });
-    assert.equal(begin.ok, true);
-    const denied = await execute({ operation: 'finishAuthorization', rootFingerprint: wrongRoot, pending: begin.data });
-    assert.equal(denied.ok, false);
-    assert.equal(denied.error.code, 'E2EE_REQUEST_FAILED');
     failure = true;
-    const error = await execute({ operation: 'recipients', rootFingerprint, config: { ...f.config, api_url: origin } });
+    const error = await execute({ operation: 'recipients', config: { ...f.config, api_url: origin } });
     assert.equal(error.error.code, 'HTTP_503');
     assert.ok(!JSON.stringify(error).includes('secret-server-content-do-not-log'));
   } finally {

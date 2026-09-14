@@ -14,7 +14,7 @@ first = client.retry(envelope)
 second = client.retry(envelope)
 sent = client.send(title="Immediate Python", body="Second message", sound="silent")
 default_envelope = client.prepare(title="Default sound", sound="default")
-legacy_envelope = client.prepare(title="Legacy sound")
+omitted_sound_envelope = client.prepare(title="Omitted sound")
 errors = []
 for options in [dict(title="No custom sound", sound="custom"),
                 dict(title="Foreign", deviceIds=["00000000-0000-0000-0000-000000000000"])]:
@@ -29,6 +29,6 @@ try:
 except PushNowError as error:
     errors.append(str(error))
 json.dump(dict(envelope=envelope, first=first, second=second, sent=sent,
-               defaultEnvelope=default_envelope, legacyEnvelope=legacy_envelope,
+               defaultEnvelope=default_envelope, omittedSoundEnvelope=omitted_sound_envelope,
                deviceCount=len(directory["devices"]), errors=errors,
                logs=client.request_logs), sys.stdout)

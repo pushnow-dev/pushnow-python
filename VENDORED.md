@@ -18,7 +18,7 @@ f164cf764fb55517a0360f3b438a3b209952bdc0945d8c8440420a7168c3157b  v2-client.js
 ```
 
 The public bridge dispatches only v2 operations. client.js is included because
-the core imports validateConfig from it; legacy sender APIs are not exposed by
+the core imports validateConfig from it; old manual authorization APIs are not exposed by
 the language bindings.
 
 Dependencies:

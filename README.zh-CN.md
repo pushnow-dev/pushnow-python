@@ -42,18 +42,10 @@ config = client.authorize_account(pending)
 
 账号 access token 来自已登录的 PushNow App 或可信 Dashboard 会话。token 只用于创建账号绑定授权，不能单独加密消息。不要打印完整 pending/config，因为里面包含私密凭据。
 
-CLI 或离线环境仍可使用手动账号根指纹流程：
-
-```python
-client = Client(os.environ["PUSHNOW_ROOT_FINGERPRINT"])
-pending = client.begin_authorization("https://api.pushnow.dev", "Python automation")
-config = client.authorize(pending)
-```
-
 ## 发送通知
 
 ```python
-client = Client(trusted_root_fingerprint, config)
+client = Client(config)
 result = client.send(title="Build finished", body="The artifact is ready.", sound="chime")
 ```
 

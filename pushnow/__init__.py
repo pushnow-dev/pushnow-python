@@ -9,9 +9,7 @@ class PushNowError(Exception):
 
 
 class Client:
-    def __init__(self, root_fingerprint=None, config=None, *, node="node", runtime=None,
-                 timeout=660):
-        self.root_fingerprint = root_fingerprint
+    def __init__(self, config=None, *, node="node", runtime=None, timeout=660):
         self.config = config
         self.node = node
         self.runtime = Path(runtime) if runtime else Path(__file__).parent / "runtime" / "main.js"
@@ -19,8 +17,7 @@ class Client:
         self.request_logs = []
 
     def _call(self, operation, **arguments):
-        payload = dict(operation=operation, rootFingerprint=self.root_fingerprint,
-                       config=self.config, **arguments)
+        payload = dict(operation=operation, config=self.config, **arguments)
         try:
             result = subprocess.run(
                 [self.node, str(self.runtime.resolve())], input=json.dumps(payload),
@@ -35,15 +32,6 @@ class Client:
         if not reply.get("ok"):
             raise PushNowError(reply.get("error", {}).get("code", "E2EE_REQUEST_FAILED"))
         return reply["data"]
-
-    def begin_authorization(self, api_url, name):
-        """Return pending credentials plus the public user_code and sender fingerprint."""
-        return self._call("beginAuthorization", apiURL=api_url, name=name)
-
-    def authorize(self, pending):
-        """Poll approval, verify the pinned account root, and retain E2EE config."""
-        self.config = self._call("finishAuthorization", pending=pending)
-        return self.config
 
     def begin_account_authorization(self, api_url, access_token, name):
         """Start token-based authorization for the signed-in account."""

@@ -12,16 +12,15 @@ No global PushNow CLI installation or sibling repository directory is required.
 
 1. Register and verify your email in PushNow, sign in on a trusted device, and
    initialize the account's encrypted archive.
-2. Obtain the full 64-character SHA-256 account-root fingerprint through a
-   trusted, independent channel, such as your already trusted app.
-   Do not derive trust from the authorization response you are about to verify.
-3. Construct a client with this pinned root fingerprint.
-4. Begin authorization. Display only authorization.user_code and fingerprint
-   (the sender public-key fingerprint) from the pending result.
-5. Approve the code and matching sender fingerprint on your trusted device.
-6. Complete authorization. The SDK decrypts the grant, checks the API origin,
-   verifies the archive certificate and pinned root, then verifies the source
-   private-key binding and recipient certificates before returning the config.
+2. Use an account access token from the signed-in app or trusted dashboard
+   session to begin an account-bound sender authorization.
+3. Display only authorization.user_code and fingerprint (the sender public-key
+   fingerprint) from the pending result.
+4. Approve the code and matching sender fingerprint on your trusted device.
+5. Complete authorization. The SDK decrypts the grant, checks the API origin,
+   verifies the account identity returned by the token-authorized request,
+   verifies the archive certificate, then verifies the source private-key
+   binding and recipient certificates before returning the config.
 
 Authorization polls until approval or server expiry. HTTP 429 respects the
 server polling interval, with a minimum of three seconds. Each HTTP request has
@@ -36,17 +35,16 @@ either object. Never print a complete pending object or config.
 
 The source credential selects an account and sender, but it does not by itself
 provide E2EE. A complete verified config must also contain api_url, user_id,
-source_id, identity_public_key, sender_private_key, and the pinned signed archive.
-Every operation rechecks the independently supplied root pin. Recipient reads
-verify account, source, archive and device certificates, and that the sender
-private key matches the certified source public key.
+source_id, identity_public_key, sender_private_key, and the signed archive.
+Recipient reads verify account, source, archive and device certificates, and
+that the sender private key matches the certified source public key.
 
 ## Operations
 
 | Operation | Result |
 | --- | --- |
-| begin authorization | Pending grant, public user code and sender fingerprint |
-| authorize | Verified E2EE config; retained on this client |
+| begin account authorization | Pending grant, public user code and sender fingerprint |
+| authorize account | Verified E2EE config; retained on this client |
 | recipients | Verified directory, with devices and signed archive |
 | prepare | Encrypted v2 envelope; files uploaded, message not yet submitted |
 | send | Object with envelope and result from submission |
@@ -68,7 +66,7 @@ Go provides the corresponding exported fields in Notification.
 | pushEnabled | Boolean, true | false saves inbox-only without push deliveries |
 | scheduledAt | Optional ISO timestamp | Future reminder time, at most 30 days from now |
 | expiresAt | Optional ISO timestamp | Future delivery expiry, at most 30 days from now and after schedule |
-| sound | Optional enum: default, silent, chime | Public notification sound metadata; omission preserves legacy behavior |
+| sound | Optional enum: default, silent, chime | Public notification sound metadata; omission uses default behavior |
 
 A file input has either path or dataBase64, plus name and mime. A path defaults
 name to its basename; dataBase64 requires an explicit name. mime defaults to
@@ -108,7 +106,7 @@ Use complete timezone-qualified ISO timestamps, for example
 30 days when actually sending). Calendar-invalid dates, missing timezones,
 past times and expiry at/before schedule are rejected. Inputs support seconds
 and optional 1-3 fractional digits. The backend is authoritative for clock bounds.
-Omitted schedule sends immediately. Omitted expiry uses the server's legacy
+Omitted schedule sends immediately. Omitted expiry uses the server's default
 30-day transport expiry.
 
 Scheduled messages are visible in history immediately. **Reading a scheduled
@@ -139,7 +137,7 @@ is encrypted: they retain routing and timing metadata.
 The saved envelope retains sound exactly, including its absence. Do not change
 sound when retrying: the backend includes explicitly supplied sound in its
 idempotency hash and rejects a changed value for an accepted message ID with 409.
-Omission preserves the old hash semantics. Sound is public metadata protected by
+Omission keeps the default hash semantics. Sound is public metadata protected by
 TLS and server request validation, not by the encrypted-content HPKE AAD.
 
 ## Encryption and Exposed Metadata
@@ -148,8 +146,8 @@ The vendored CLI core uses RFC 9180 HPKE Auth mode with DHKEM(P-256, HKDF-SHA256
 HKDF-SHA256, AES-256-GCM and info pushnow-v2. Message and preview AAD bind the
 protocol version, purpose, account, source, message and archive IDs. Sender grants
 use the existing HPKE base-mode grant contract and are checked against the
-independently pinned account root. Device/source/archive certificates use
-ECDSA P-256 SHA-256. No HPKE primitive is implemented by these bindings.
+token-authorized account identity. Device/source/archive certificates use ECDSA
+P-256 SHA-256. No HPKE primitive is implemented by these bindings.
 
 Files use independently generated AES-256-GCM keys and nonces. File AAD binds
 account, source and attachment ID. File keys, names, MIME data and digest travel
@@ -173,11 +171,11 @@ ciphertext. Logs are local in-memory arrays; persist or forward them yourself
 with your own retention policy. They are not the server's delivery log and
 do not prove recipient-visible delivery.
 
-Errors return bounded codes such as ROOT_PIN_REQUIRED, ROOT_PIN_MISMATCH,
-E2EE_CONFIG_REQUIRED, INVALID_SCHEDULE, INVALID_EXPIRY, UNKNOWN_DEVICE,
-INVALID_SOUND, HTTP_401, HTTP_409, HTTP_503 or BRIDGE_RUNTIME_FAILED. Cryptographic
-or unexpected failures use E2EE_REQUEST_FAILED rather than echoing sensitive
-exception details. Standard error from the bridge is not propagated.
+Errors return bounded codes such as E2EE_CONFIG_REQUIRED, INVALID_SCHEDULE,
+INVALID_EXPIRY, UNKNOWN_DEVICE, INVALID_SOUND, HTTP_401, HTTP_409, HTTP_503 or
+BRIDGE_RUNTIME_FAILED. Cryptographic or unexpected failures use
+E2EE_REQUEST_FAILED rather than echoing sensitive exception details. Standard
+error from the bridge is not propagated.
 
 HTTP acceptance, successful fixture tests and APNs acceptance do not prove a
 visible notification. Actual device delivery also depends on server scheduling,

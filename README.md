@@ -51,19 +51,10 @@ messages by itself. Store the returned config securely for reuse.
 [examples/authorize.py](examples/authorize.py) creates a new mode-0600 config
 file without overwriting an existing one.
 
-Manual fingerprint authorization remains available for CLI/offline setups:
-
-```python
-client = Client(os.environ['PUSHNOW_ROOT_FINGERPRINT'])
-pending = client.begin_authorization('https://api.pushnow.dev', 'Python automation')
-config = client.authorize(pending)
-```
-
 ## Send and Retry
 
 ```python
-client = Client(trusted_root_fingerprint, config,
-                runtime='/absolute/path/to/runtime/main.js')
+client = Client(config, runtime='/absolute/path/to/runtime/main.js')
 devices = client.recipients()['devices']
 outbox = client.prepare(
     title='Build finished', body='The artifact is ready.', sound='chime',
@@ -81,7 +72,7 @@ Omit deviceIds for all eligible devices. `pushEnabled=False` or `deviceIds=[]`
 saves inbox-only. `scheduledAt` and `expiresAt` accept future timezone-qualified
 ISO strings within 30 days. Option names are camelCase, matching the JSON wire
 terminology. `sound='default'`, `sound='silent'` and `sound='chime'` are supported
-public routing options. Omit sound for legacy behavior. `sound=None` and unknown
+public routing options. Omit sound to use the default behavior. `sound=None` and unknown
 values fail with `INVALID_SOUND` before uploads. Silent keeps the visible alert;
 chime maps to the app's `pushnow-chime.wav`. Neither changes inbox-only settings.
 

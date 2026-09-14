@@ -1,7 +1,6 @@
 import { readFile, stat } from 'node:fs/promises';
 import { basename } from 'node:path';
-import { beginAccountLogin, beginLogin, finishAccountLogin, finishLogin } from './v2-auth.js';
-import { fingerprint } from './v2-crypto.js';
+import { beginAccountLogin, finishAccountLogin } from './v2-auth.js';
 import { decode } from './crypto.js';
 import { recipientsV2, uploadAttachment, prepareMessageV2, submitMessageV2 } from './v2-client.js';
 
@@ -9,16 +8,9 @@ class InputError extends Error {
   constructor(code) { super(code); this.code = code; }
 }
 const requireValue = (ok, code = 'INVALID_INPUT') => { if (!ok) throw new InputError(code); };
-function pin(value) {
-  requireValue(typeof value === 'string' && /^[a-f0-9]{64}$/i.test(value), 'ROOT_PIN_REQUIRED');
-  return value.toLowerCase();
-}
 function configFor(input) {
   const config = input.config;
   requireValue(config && config.archive, 'E2EE_CONFIG_REQUIRED');
-  if (input.rootFingerprint !== undefined && input.rootFingerprint !== null && input.rootFingerprint !== '') {
-    requireValue(fingerprint(config.identity_public_key) === pin(input.rootFingerprint), 'ROOT_PIN_MISMATCH');
-  }
   return config;
 }
 function timestamp(value) {
@@ -91,19 +83,9 @@ export async function execute(input) {
   try {
     const options = fetchOptions(logs);
     let data;
-    if (input.operation === 'beginAuthorization') {
-      pin(input.rootFingerprint);
-      const pending = await beginLogin(input.apiURL, input.name, options);
-      data = { ...pending, expectedRootFingerprint: pin(input.rootFingerprint) };
-    } else if (input.operation === 'beginAccountAuthorization') {
+    if (input.operation === 'beginAccountAuthorization') {
       const pending = await beginAccountLogin(input.apiURL, input.accessToken, input.name, options);
       data = pending;
-    } else if (input.operation === 'finishAuthorization') {
-      const expected = pin(input.rootFingerprint);
-      requireValue(input.pending?.expectedRootFingerprint === expected, 'ROOT_PIN_MISMATCH');
-      data = await finishLogin(input.pending, { ...options, expectedIdentityFingerprint: expected });
-      // Check source key binding and every recipient certificate before returning credentials.
-      await recipientsV2(data, options);
     } else if (input.operation === 'finishAccountAuthorization') {
       data = await finishAccountLogin(input.pending, options);
       await recipientsV2(data, options);
