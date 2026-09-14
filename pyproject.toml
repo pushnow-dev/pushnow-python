@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools==80.9.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pushnow"
+version = "0.1.0"
+description = "Python bindings for PushNow v2 encrypted notifications with an explicit Node.js crypto runtime"
+requires-python = ">=3.10"
+dependencies = []
+readme = "README.md"
+keywords = ["pushnow", "notifications", "e2ee", "hpke", "sdk", "automation", "ai-agents"]
+
+[project.urls]
+Homepage = "https://github.com/pushnow-dev/pushnow-python"
+Issues = "https://github.com/pushnow-dev/pushnow-python/issues"
+Source = "https://github.com/pushnow-dev/pushnow-python"
+
+[tool.setuptools]
+py-modules = ["pushnow"]
+
+# Runtime is deliberately shipped as a separate directory in this source repo.
+# Pass runtime= after installing until the wheel packaging is finalized.

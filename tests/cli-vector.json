@@ -1,0 +1,105 @@
+{
+  "fixture": {
+    "config": {
+      "api_url": "https://api.example.test",
+      "user_id": "2eb77c4e-f0fb-451a-b2cf-3fe97523764e",
+      "source_id": "e2d520de-4901-4dec-a864-3f91ae026777",
+      "source_key": "test-source-credential",
+      "identity_public_key": "BFqrszThIpVr7uv6tANb9+UiBBEW195kfXXku46LMJq9r76Fu9OgyBVg9JFyJNMEF/aWJABNyOEi2DkHTMiXzE8=",
+      "sender_private_key": "qizflt3t4cuXh4f5PpyZidsKOSA/JaUQwfj+S1NJXmk=",
+      "archive": {
+        "id": "3de6e086-6201-4d2e-99d8-919c957f0fa6",
+        "public_key": "BJ/GyP/Yqqjl1KAnPKzE65R1WANF7mtpU/m7FGoSOHqq6Hh8kuyZyGtMDd74dUJX/EWNgDjEvCfDrFEaLAOayCQ=",
+        "certificate": "WVdeO9ySjuZwEN3Z22qjTIx9DEhWGe4GUYNGT2lzdwlHFnJRE6l2rilYUJsdofj0CB8he4CbmSd5l5ipBvkMOg=="
+      }
+    },
+    "directory": {
+      "user_id": "2eb77c4e-f0fb-451a-b2cf-3fe97523764e",
+      "source_id": "e2d520de-4901-4dec-a864-3f91ae026777",
+      "identity_public_key": "BFqrszThIpVr7uv6tANb9+UiBBEW195kfXXku46LMJq9r76Fu9OgyBVg9JFyJNMEF/aWJABNyOEi2DkHTMiXzE8=",
+      "source_public_key": "BHKCPUaA03G8srLIbCiKQE5y+sxC/w+Tlmk9n7EXMz3M5WnWnZKkT6Ve/FwKYXEOm+U8IWQb8QiO1N8AH8biiuk=",
+      "source_certificate": "kZJlsdmE+exUCtevzCjFzTAhJqIctDI5ZnIXSA85l/jVeBX/MGSvs5MpWYvG/OhakShklVrwX95mTxl8No6o0w==",
+      "devices": [
+        {
+          "id": "a98c02c7-cc6b-44bd-b179-93221f215578",
+          "user_id": "2eb77c4e-f0fb-451a-b2cf-3fe97523764e",
+          "name": "Phone 1",
+          "platform": "ios",
+          "public_key": "BA4tOZK5Qd6Bp/Qa3AqrPH9ah1IyJ0nxrpOSFdh0gVNVDdn6A/oJrJxi8S259IgWutf4hbCcJU+GzqoZyqAbvPc=",
+          "certificate": "8gbAxxnZ1QRgwSxWiHHHFSzt+EoTI8zCz8ugrRkaaCxeMHeDfLhnBa2kuWp+8efoHKGuF2EZxl6KYr9iMD59rg==",
+          "status": "active",
+          "notifications_enabled": true
+        },
+        {
+          "id": "3a72a9eb-66ec-4e28-a624-a109c6cd407d",
+          "user_id": "2eb77c4e-f0fb-451a-b2cf-3fe97523764e",
+          "name": "Phone 2",
+          "platform": "ios",
+          "public_key": "BJI0+UXKlJis4V0F8pB7RMdkQiuL/1RRi6KPeV97zDxB935Wm2hQWBy7FnK83qyL5sL23KRS2jfn13APA+Bqs6c=",
+          "certificate": "TyD6M/AtehpDVhMuZ12oXPfcC/5Hub0HSbo9yCZwD0RFiTR3SYBwNyjzQTuZaBWK9wVIfkexfdFKvheGxfuIGw==",
+          "status": "active",
+          "notifications_enabled": true
+        }
+      ],
+      "archive": {
+        "id": "3de6e086-6201-4d2e-99d8-919c957f0fa6",
+        "public_key": "BJ/GyP/Yqqjl1KAnPKzE65R1WANF7mtpU/m7FGoSOHqq6Hh8kuyZyGtMDd74dUJX/EWNgDjEvCfDrFEaLAOayCQ=",
+        "certificate": "WVdeO9ySjuZwEN3Z22qjTIx9DEhWGe4GUYNGT2lzdwlHFnJRE6l2rilYUJsdofj0CB8he4CbmSd5l5ipBvkMOg=="
+      }
+    },
+    "devices": [
+      {
+        "id": "a98c02c7-cc6b-44bd-b179-93221f215578",
+        "user_id": "2eb77c4e-f0fb-451a-b2cf-3fe97523764e",
+        "name": "Phone 1",
+        "platform": "ios",
+        "public_key": "BA4tOZK5Qd6Bp/Qa3AqrPH9ah1IyJ0nxrpOSFdh0gVNVDdn6A/oJrJxi8S259IgWutf4hbCcJU+GzqoZyqAbvPc=",
+        "certificate": "8gbAxxnZ1QRgwSxWiHHHFSzt+EoTI8zCz8ugrRkaaCxeMHeDfLhnBa2kuWp+8efoHKGuF2EZxl6KYr9iMD59rg==",
+        "status": "active",
+        "notifications_enabled": true
+      },
+      {
+        "id": "3a72a9eb-66ec-4e28-a624-a109c6cd407d",
+        "user_id": "2eb77c4e-f0fb-451a-b2cf-3fe97523764e",
+        "name": "Phone 2",
+        "platform": "ios",
+        "public_key": "BJI0+UXKlJis4V0F8pB7RMdkQiuL/1RRi6KPeV97zDxB935Wm2hQWBy7FnK83qyL5sL23KRS2jfn13APA+Bqs6c=",
+        "certificate": "TyD6M/AtehpDVhMuZ12oXPfcC/5Hub0HSbo9yCZwD0RFiTR3SYBwNyjzQTuZaBWK9wVIfkexfdFKvheGxfuIGw==",
+        "status": "active",
+        "notifications_enabled": true
+      }
+    ],
+    "privateKeys": [
+      "l1Euv/4I+UrZkVG3mSJzGpNXGfqBPgPPzgxYSHSoff0=",
+      "Leuu4NO1Po2k2qRzn/xNHhCQ6hDEaVUKZo6yx1dJ2+c="
+    ],
+    "sender": {
+      "privateKey": "qizflt3t4cuXh4f5PpyZidsKOSA/JaUQwfj+S1NJXmk=",
+      "publicKey": "BHKCPUaA03G8srLIbCiKQE5y+sxC/w+Tlmk9n7EXMz3M5WnWnZKkT6Ve/FwKYXEOm+U8IWQb8QiO1N8AH8biiuk="
+    },
+    "identityPrivateKey": "pXXObJu/vNKNZt/svtd5jLbFr6H20UCki5XFVb88Orw=",
+    "archiveKey": {
+      "privateKey": "494JL2cep6yci+UgdFC3Rqub9/yUYB21H+elZLCvYmU=",
+      "publicKey": "BJ/GyP/Yqqjl1KAnPKzE65R1WANF7mtpU/m7FGoSOHqq6Hh8kuyZyGtMDd74dUJX/EWNgDjEvCfDrFEaLAOayCQ="
+    }
+  },
+  "plaintext": {
+    "title": "CLI reference",
+    "body": "Authenticated cross-language vector",
+    "links": [
+      "https://example.com"
+    ],
+    "attachments": []
+  },
+  "envelope": {
+    "message_id": "904fe7f8-3916-4f04-8a91-ed6cdbfb780c",
+    "archive_id": "3de6e086-6201-4d2e-99d8-919c957f0fa6",
+    "enc": "BNlBfPouD1VF7/vYpFl+ICZS/bBf5Q00JT8gb9xPAO6r97BiKfK/or8V+s01/bmZt1kR7i1mBnrJC77Gcreh2KI=",
+    "ciphertext": "aslY/JJi2qzW5WXyVkKKy1cM6Pv0/tetHFqwNmuizLy8FPypMcGF2lhksY+OZ0IhRR7LVIqxAMv+R/VIUu8aHs2rDrAC0OGANd5AkT43Trl5QASEJUkjLZLZ0soVFqxlu1FJKgd//rLq3KQ1cX+z0xhpy9PPlA5Q/1n8pjhyzikfAL5U/opb",
+    "preview": {
+      "enc": "BIJlxsGHa0rLCVtkYcsgESWkZkxiQfQyt22gzSv4xME0fv/6Wlz01FltPrcJT9pNqxiFboBQ47g+VHEAu+WfPHw=",
+      "ciphertext": "UjUK7S+qJrMnPDbuqKq62fFlWTU4G7QN2SRTxd1b6BHlwyAzeh2XwwGGfSKAJOBSvcGxBSQqXaZYMgGa9XcL9jM+KKHwsv48f1CBUJSvc6OUIB73Pgk="
+    },
+    "attachment_ids": []
+  }
+}
