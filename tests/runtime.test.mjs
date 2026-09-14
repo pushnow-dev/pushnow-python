@@ -38,12 +38,12 @@ test('decrypts actual CLI-produced HPKE Auth vector; rejects tampering and wrong
   await assert.rejects(open(vector.envelope, 'message', { ...f.config, user_id: randomUUID() }));
   await assert.rejects(open(vector.envelope, 'message', { ...f.config, source_id: randomUUID() }));
 });
-test('rejects token-only config, missing root pin and invalid sound before upload', async () => {
+test('rejects token-only config, does not require a manual pin for complete config and invalid sound before upload', async () => {
   const rootFingerprint = fingerprint(f.config.identity_public_key);
   const token = await execute({ operation: 'recipients', rootFingerprint, config: { source_key: 'secret' } });
   assert.equal(token.error.code, 'E2EE_CONFIG_REQUIRED'); assert.deepEqual(token.logs, []);
-  const unpinned = await execute({ operation: 'recipients', config: f.config });
-  assert.equal(unpinned.error.code, 'ROOT_PIN_REQUIRED');
+  const unpinned = await execute({ operation: 'prepare', config: f.config, notification: { title: 'Hi', sound: 'custom' } });
+  assert.equal(unpinned.error.code, 'INVALID_SOUND'); assert.deepEqual(unpinned.logs, []);
   const wrong = await execute({ operation: 'recipients', config: f.config, rootFingerprint: '0'.repeat(64) });
   assert.equal(wrong.error.code, 'ROOT_PIN_MISMATCH');
   for (const value of [null, '', 'custom', 'pushnow-chime.wav', {}, false]) {
@@ -57,6 +57,7 @@ test('rejects token-only config, missing root pin and invalid sound before uploa
 
 test('language binding authorizes against pinned root and sends real HTTP E2EE requests', { timeout: 180000 }, async () => {
   const uploads = new Map(), messages = new Map(), pending = new Map();
+  const accountAccessToken = 'account-test-token';
   const originalSourcePublic = f.directory.source_public_key;
   let origin, failure, failures = [];
   const server = createServer(async (req, res) => {
@@ -65,6 +66,12 @@ test('language binding authorizes against pinned root and sends real HTTP E2EE r
       const data = Buffer.concat(chunks), url = new URL(req.url, origin);
       const json = data.length && req.headers['content-type'] !== 'application/octet-stream' ? JSON.parse(data) : undefined;
       const send = (value, status = 200) => { res.writeHead(status, { 'content-type': 'application/json' }); res.end(JSON.stringify(value)); };
+      if (url.pathname === '/v2/account-authorizations' && req.method === 'POST') {
+        assert.equal(req.headers.authorization, 'Bearer ' + accountAccessToken);
+        const id = randomUUID(); pending.set(id, json.public_key);
+        return send({ id, user_code: 'TEST2345', device_code: 'test-device-code', expires_at: new Date(Date.now() + 120000).toISOString(),
+          interval: 3, user_id: f.config.user_id, identity_public_key: f.config.identity_public_key });
+      }
       if (url.pathname === '/v2/authorizations' && req.method === 'POST') {
         const id = randomUUID(); pending.set(id, json.public_key);
         return send({ id, user_code: 'TEST2345', device_code: 'test-device-code', expires_at: new Date(Date.now() + 120000).toISOString(), interval: 3 });
@@ -126,7 +133,7 @@ test('language binding authorizes against pinned root and sends real HTTP E2EE r
       child.stdout.on('data', b => { out += b; }); child.stderr.on('data', b => { err += b; });
       child.on('error', e => { clearTimeout(timer); reject(e); });
       child.on('close', code => { clearTimeout(timer); code === 0 ? resolve(JSON.parse(out)) : reject(new Error('Probe failed: ' + err)); });
-      child.stdin.end(JSON.stringify({ apiURL: origin, rootFingerprint, notification }));
+      child.stdin.end(JSON.stringify({ apiURL: origin, accessToken: accountAccessToken, rootFingerprint, notification }));
     });
     assert.deepEqual(failures, []); assert.equal(output.deviceCount, 2);
     assert.equal(output.first.deduplicated, false); assert.equal(output.second.deduplicated, true);

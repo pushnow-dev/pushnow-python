@@ -6,7 +6,7 @@ import sys
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from pushnow import Client
 
-client = Client(os.environ['PUSHNOW_ROOT_FINGERPRINT'], json.loads(Path('private-config.json').read_text()))
+client = Client(config=json.loads(Path('private-config.json').read_text()))
 outbox = Path('outbox.json')
 if outbox.exists():
     envelope = json.loads(outbox.read_text())

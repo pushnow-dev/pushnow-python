@@ -5,9 +5,9 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from pushnow import Client, PushNowError
 
 request = json.load(sys.stdin)
-client = Client(request["rootFingerprint"])
-pending = client.begin_authorization(request["apiURL"], "Python integration")
-client.authorize(pending)
+client = Client()
+pending = client.begin_account_authorization(request["apiURL"], request["accessToken"], "Python integration")
+client.authorize_account(pending)
 directory = client.recipients()
 envelope = client.prepare(**request["notification"])
 first = client.retry(envelope)

@@ -9,7 +9,7 @@ class PushNowError(Exception):
 
 
 class Client:
-    def __init__(self, root_fingerprint, config=None, *, node="node", runtime=None,
+    def __init__(self, root_fingerprint=None, config=None, *, node="node", runtime=None,
                  timeout=660):
         self.root_fingerprint = root_fingerprint
         self.config = config
@@ -43,6 +43,15 @@ class Client:
     def authorize(self, pending):
         """Poll approval, verify the pinned account root, and retain E2EE config."""
         self.config = self._call("finishAuthorization", pending=pending)
+        return self.config
+
+    def begin_account_authorization(self, api_url, access_token, name):
+        """Start token-based authorization for the signed-in account."""
+        return self._call("beginAccountAuthorization", apiURL=api_url, accessToken=access_token, name=name)
+
+    def authorize_account(self, pending):
+        """Poll trusted-device approval for a token-bound account authorization."""
+        self.config = self._call("finishAccountAuthorization", pending=pending)
         return self.config
 
     def recipients(self):

@@ -23,20 +23,32 @@ npm --prefix runtime test
 
 安装包会包含 Node bridge runtime。部署机器还需要安装 runtime 中锁定的 npm 依赖。
 
-## 授权
+## 使用账号 Token 授权
 
 ```python
 import os
 from pushnow import Client
 
-client = Client(os.environ["PUSHNOW_ROOT_FINGERPRINT"])
-pending = client.begin_authorization("https://api.pushnow.dev", "Python automation")
+client = Client()
+pending = client.begin_account_authorization(
+    "https://api.pushnow.dev",
+    os.environ["PUSHNOW_ACCESS_TOKEN"],
+    "Python automation",
+)
 print(pending["authorization"]["user_code"])
 print(pending["fingerprint"])
-config = client.authorize(pending)
+config = client.authorize_account(pending)
 ```
 
-账号根指纹必须来自可信设备。不要打印完整 pending/config，因为里面包含私密凭据。
+账号 access token 来自已登录的 PushNow App 或可信 Dashboard 会话。token 只用于创建账号绑定授权，不能单独加密消息。不要打印完整 pending/config，因为里面包含私密凭据。
+
+CLI 或离线环境仍可使用手动账号根指纹流程：
+
+```python
+client = Client(os.environ["PUSHNOW_ROOT_FINGERPRINT"])
+pending = client.begin_authorization("https://api.pushnow.dev", "Python automation")
+config = client.authorize(pending)
+```
 
 ## 发送通知
 

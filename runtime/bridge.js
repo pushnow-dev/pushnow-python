@@ -1,6 +1,6 @@
 import { readFile, stat } from 'node:fs/promises';
 import { basename } from 'node:path';
-import { beginLogin, finishLogin } from './v2-auth.js';
+import { beginAccountLogin, beginLogin, finishAccountLogin, finishLogin } from './v2-auth.js';
 import { fingerprint } from './v2-crypto.js';
 import { decode } from './crypto.js';
 import { recipientsV2, uploadAttachment, prepareMessageV2, submitMessageV2 } from './v2-client.js';
@@ -16,7 +16,9 @@ function pin(value) {
 function configFor(input) {
   const config = input.config;
   requireValue(config && config.archive, 'E2EE_CONFIG_REQUIRED');
-  requireValue(fingerprint(config.identity_public_key) === pin(input.rootFingerprint), 'ROOT_PIN_MISMATCH');
+  if (input.rootFingerprint !== undefined && input.rootFingerprint !== null && input.rootFingerprint !== '') {
+    requireValue(fingerprint(config.identity_public_key) === pin(input.rootFingerprint), 'ROOT_PIN_MISMATCH');
+  }
   return config;
 }
 function timestamp(value) {
@@ -93,11 +95,17 @@ export async function execute(input) {
       pin(input.rootFingerprint);
       const pending = await beginLogin(input.apiURL, input.name, options);
       data = { ...pending, expectedRootFingerprint: pin(input.rootFingerprint) };
+    } else if (input.operation === 'beginAccountAuthorization') {
+      const pending = await beginAccountLogin(input.apiURL, input.accessToken, input.name, options);
+      data = pending;
     } else if (input.operation === 'finishAuthorization') {
       const expected = pin(input.rootFingerprint);
       requireValue(input.pending?.expectedRootFingerprint === expected, 'ROOT_PIN_MISMATCH');
       data = await finishLogin(input.pending, { ...options, expectedIdentityFingerprint: expected });
       // Check source key binding and every recipient certificate before returning credentials.
+      await recipientsV2(data, options);
+    } else if (input.operation === 'finishAccountAuthorization') {
+      data = await finishAccountLogin(input.pending, options);
       await recipientsV2(data, options);
     } else {
       const config = configFor(input);
